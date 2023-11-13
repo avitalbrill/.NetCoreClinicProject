@@ -1,60 +1,66 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using API.Entities;
+using Microsoft.AspNetCore.Mvc;
 using System.Security.Cryptography.Xml;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace API.Controllers
-{ 
+{
     [Route("api/[controller]")]
     [ApiController]
     public class DoctorController : ControllerBase
     {
-        private static List<Doctor> doctors = new List<Doctor> { new Doctor { tz = 325997633, firstName="avital",lastName="brill" ,domain="dentist"} };
-
-        public DoctorController() 
+        public readonly DataContext _dataContext;
+        public DoctorController(DataContext dataContext)
         {
-          
-        }   
+            _dataContext = dataContext;
+        }
         // GET: api/<EventsController>
         [HttpGet]
-        public IEnumerable<Doctor> Get()
+        public ActionResult<IEnumerable<Doctor>> Get()
         {
-            return doctors;
+            return _dataContext.Doctors;
         }
         // GET: api/<EventsController>/{tz}
         [HttpGet]
         public ActionResult<Doctor> Get(int tz)
         {
-            Doctor d = doctors.Find(e => e.tz == tz);
-                if (d != null)
+            Doctor d = _dataContext.Doctors.Find(e => e.Tz == tz);
+            if (d != null)
                 return d;
-                else return NotFound();
+            else return NotFound();
         }
 
         // POST api/<EventsController>
         [HttpPost]
         public void Post([FromBody] Doctor newDoctor)
         {
-            doctors.Add(new Doctor { tz=newDoctor.tz,firstName=newDoctor.firstName,lastName=newDoctor.lastName,domain=newDoctor.domain });
+            _dataContext.Doctors.Add(new Doctor { Tz = newDoctor.Tz, FirstName = newDoctor.FirstName, LastName = newDoctor.LastName, Domain = newDoctor.Domain });
         }
 
         // PUT api/<EventsController>/{tz}
         [HttpPut("{id}")]
-        public void Put(int tz,Doctor d)
+        public ActionResult<Doctor> Put(int tz, Doctor d)
         {
-            Doctor d1 = doctors.Find(e => e.tz == tz);
-            d1.tz=d.tz;  
-            d1.firstName=d.firstName;
-            d1.lastName=d.lastName;
-            d1.domain=d.domain;   
+            Doctor d1 = _dataContext.Doctors.Find(e => e.Tz == tz);
+            if(d1== null)
+            {
+                return NotFound();
+            }
+            d1.Tz = d.Tz;
+            d1.FirstName = d.FirstName;
+            d1.LastName = d.LastName;
+            d1.Domain = d.Domain;
+
+            return d1;
         }
 
         // DELETE api/<EventsController>/{tz}
         [HttpDelete("{id}")]
         public void Delete(int tz)
         {
-            Doctor d = doctors.Find(e => e.tz == tz);
-            doctors.Remove(d);
+            Doctor d = _dataContext.Doctors.Find(e => e.Tz == tz);
+            _dataContext.Doctors.Remove(d);
         }
     }
 }

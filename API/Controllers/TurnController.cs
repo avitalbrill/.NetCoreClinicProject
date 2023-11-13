@@ -7,17 +7,16 @@ namespace API.Controllers
 {
     public class TurnController : Controller
     {
-        private static List<Turn> turns = new List<Turn> { new Turn { Date = 09/07/23, hour = 23, treatmentDuration = 10 } };
-
-        public TurnController()
+       public readonly DataContext _dataContext;    
+        public TurnController(DataContext dataContext)
         {
-
+            _dataContext = dataContext;
         }
         // GET: api/<EventsController>
         [HttpGet]
         public IEnumerable<Turn> Get()
         {
-            return turns;
+            return _dataContext.Turns;
         }
         // GET: api/<EventsController>/{hour}
         [HttpGet]
@@ -25,7 +24,7 @@ namespace API.Controllers
         {
             if (hour>24)
                 return NotFound();
-            Turn t = turns.Find(e => e.hour == hour);
+            Turn t = _dataContext.Turns.Find(e => e.Hour == hour);
             if (t is null)
                 return NotFound();
             return t;
@@ -35,7 +34,7 @@ namespace API.Controllers
         [HttpPost]
         public void Post([FromBody] Turn newTurn)
         {
-            turns.Add(new Turn { Date=newTurn.Date,hour=newTurn.hour,treatmentDuration=newTurn.treatmentDuration });
+            _dataContext.Turns.Add(new Turn { Date=newTurn.Date,Hour=newTurn.Hour,TreatmentDuration=newTurn.TreatmentDuration });
         }
 
         // PUT api/<EventsController>/{hour}
@@ -44,12 +43,12 @@ namespace API.Controllers
         {
             if (t is null)
                 return NotFound();
-            Turn t1 = turns.Find(e => e.hour == hour);
+            Turn t1 = _dataContext.Turns.Find(e => e.Hour == hour);
             if (t1 == null)
                 return BadRequest();
             t1.Date = t.Date;
-            t1.hour = t.hour;
-            t1.treatmentDuration = t.treatmentDuration;
+            t1.Hour = t.Hour;
+            t1.TreatmentDuration = t.TreatmentDuration;
             return NoContent();
         }
 
@@ -57,10 +56,10 @@ namespace API.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(DateTime date)
         {
-            Turn t= turns.Find(e => e.Date == date);
+            Turn t= _dataContext.Turns.Find(e => e.Date == date);
             if (date==null)
                 return NotFound();
-            turns.Remove(t);
+            _dataContext.Turns.Remove(t);
             return NoContent();
         }
     }

@@ -6,23 +6,23 @@ namespace API.Controllers
 {
     public class PatientController : Controller
     {
-        private static List<Patient> patients = new List<Patient> { new Patient { tz = 325997633, firstName = "avital", lastName = "brill", age = 19 } };
+       public readonly DataContext _dataContext;
 
-        public PatientController()
+        public PatientController(DataContext dataContext)
         {
-
+            _dataContext = dataContext;
         }
         // GET: api/<EventsController>
         [HttpGet]
         public IEnumerable<Patient> Get()
         {
-            return patients;
+            return _dataContext.Patients;
         }
         // GET: api/<EventsController>/{tz}
         [HttpGet]
         public ActionResult<Patient> Get(int tz)
         {
-            Patient p = patients.Find(e => e.tz == tz);
+            Patient p = _dataContext.Patients.Find(e => e.Tz == tz);
             if (p != null)
                 return p;
              return NotFound();
@@ -32,26 +32,26 @@ namespace API.Controllers
         [HttpPost]
         public void Post([FromBody] Patient newPatient)
         {
-            patients.Add(new Patient { tz = newPatient.tz, firstName = newPatient.firstName, lastName = newPatient.lastName, age = newPatient.age });
+            _dataContext.Patients.Add(new Patient { Tz = newPatient.Tz, FirstName = newPatient.FirstName, LastName = newPatient.LastName, Age = newPatient.Age });
         }
 
         // PUT api/<EventsController>/{tz}
         [HttpPut("{id}")]
         public void Put(int tz, Patient p)
         {
-            Patient p1 = patients.Find(e => e.tz == tz);
-            p1.tz = p.tz;
-            p1.firstName = p.firstName;
-            p1.lastName = p.lastName;
-            p1.age = p.age;
+            Patient p1 = _dataContext.Patients.Find(e => e.Tz == tz);
+            p1.Tz = p.Tz;
+            p1.FirstName = p.FirstName;
+            p1.LastName = p.LastName;
+            p1.Age = p.Age;
         }
 
         // DELETE api/<EventsController>/{tz}
         [HttpDelete("{id}")]
         public void Delete(int tz)
         {
-            Patient p1 = patients.Find(e => e.tz == tz);
-            patients.Remove(p1);
+            Patient p1 = _dataContext.Patients.Find(e => e.Tz == tz);
+            _dataContext.Patients.Remove(p1);
         }
     }
 }
