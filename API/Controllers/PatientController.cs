@@ -1,57 +1,84 @@
-﻿using API.Entities;
+﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Solid.API.Entities;
+using Solid.Core.DTOs;
+using Solid.Core.Entities;
+using Solid.Core.Services;
+using Solid.Service;
 
 namespace API.Controllers
 {
-    public class PatientController : Controller
+    [Route("api/[controller]")]
+    [ApiController]
+    public class PatientController : ControllerBase
     {
-       public readonly DataContext _dataContext;
-
-        public PatientController(DataContext dataContext)
+        private readonly IPatientService _patientService;
+        private readonly IMapper _mapper;
+        public PatientController(IPatientService patientService, IMapper mapper)
         {
-            _dataContext = dataContext;
+            _patientService = patientService;
+            _mapper = mapper;
         }
         // GET: api/<EventsController>
         [HttpGet]
-        public IEnumerable<Patient> Get()
+        public async Task<ActionResult<Patient>> Get()
         {
-            return _dataContext.Patients;
+            var patients =await _patientService.GetAllPatientsAsync();
+            var patientsDto=_mapper.Map<IEnumerable<PatientDto>>(patients);
+            if(patients == null)   
+                return NotFound();
+            return Ok(patientsDto);
         }
-        // GET: api/<EventsController>/{tz}
-        [HttpGet]
-        public ActionResult<Patient> Get(int tz)
+        // GET: api/<EventsController>/{Tz}
+        //[HttpGet("{Tz}")]
+        //public ActionResult<Patient> Get(int Tz)
+        //{
+        //    var patient = _patientService.GetPatientByTz(Tz);
+        //    var patientDto= _mapper.Map<Patient>(patient);
+        //    if (patient == null)
+        //        return NotFound();
+        //    return Ok(patientDto);
+
+        //}
+        // GET: api/<EventsController>/{id}
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Patient>> Get(int id)
         {
-            Patient p = _dataContext.Patients.Find(e => e.Tz == tz);
-            if (p != null)
-                return p;
-             return NotFound();
+            var patient =await _patientService.GetPatientByIdAsync(id);
+            var patientDto = _mapper.Map<PatientDto>(patient);
+            if (patient == null)
+                return NotFound();
+            return Ok(patientDto);
+
         }
 
         // POST api/<EventsController>
         [HttpPost]
-        public void Post([FromBody] Patient newPatient)
+        public async Task<ActionResult> Post([FromBody] PatientPostModel newPatient)
         {
-            _dataContext.Patients.Add(new Patient { Tz = newPatient.Tz, FirstName = newPatient.FirstName, LastName = newPatient.LastName, Age = newPatient.Age });
+            var patientToAdd=new Patient {Tz=newPatient.Tz,FirstName=newPatient.FirstName,LastName=newPatient.LastName,Age=newPatient.Age};
+            var newP=await _patientService.AddPatientAsync(patientToAdd);
+            var patientDto = _mapper.Map<PatientDto>(newP);
+            return Ok(patientDto);
         }
 
-        // PUT api/<EventsController>/{tz}
+        // PUT api/<EventsController>/{id}
         [HttpPut("{id}")]
-        public void Put(int tz, Patient p)
+        public async Task<ActionResult<Patient>> Put(int id, [FromBody] PatientPostModel p)
         {
-            Patient p1 = _dataContext.Patients.Find(e => e.Tz == tz);
-            p1.Tz = p.Tz;
-            p1.FirstName = p.FirstName;
-            p1.LastName = p.LastName;
-            p1.Age = p.Age;
+            var patientToAdd = new Patient { Tz = p.Tz, FirstName = p.FirstName, LastName = p.LastName, Age = p.Age };
+            Patient pat=await _patientService.UpdatePatientAsync(id,patientToAdd);
+            if(pat== null) return NotFound();   
+            return Ok(pat);
         }
 
-        // DELETE api/<EventsController>/{tz}
+        // DELETE api/<EventsController>/{id}
         [HttpDelete("{id}")]
-        public void Delete(int tz)
+        public async Task Delete(int id)
         {
-            Patient p1 = _dataContext.Patients.Find(e => e.Tz == tz);
-            _dataContext.Patients.Remove(p1);
+           await _patientService.DeletePatientAsync(id);
+          
         }
     }
 }

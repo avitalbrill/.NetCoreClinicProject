@@ -1,5 +1,10 @@
-﻿using API.Entities;
+﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Solid.API.Entities;
+using Solid.Core.DTOs;
+using Solid.Core.Entities;
+using Solid.Core.Services;
+using System.Numerics;
 using System.Security.Cryptography.Xml;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -10,57 +15,72 @@ namespace API.Controllers
     [ApiController]
     public class DoctorController : ControllerBase
     {
-        public readonly DataContext _dataContext;
-        public DoctorController(DataContext dataContext)
+        private readonly IDoctorService _doctorService;
+        private readonly IMapper _mapper;
+        public DoctorController(IDoctorService doctorService,IMapper mapper)
         {
-            _dataContext = dataContext;
+            _doctorService = doctorService;
+            _mapper = mapper;
         }
         // GET: api/<EventsController>
         [HttpGet]
-        public ActionResult<IEnumerable<Doctor>> Get()
+        public async Task<ActionResult<Doctor>> Get()
         {
-            return _dataContext.Doctors;
+            var doctors =await _doctorService.GetAllDoctorsAsync();
+            var doctorsDto = _mapper.Map<IEnumerable<DoctorDto>>(doctors);
+            if (doctors == null)
+                return NotFound();
+            return Ok(doctorsDto);
         }
-        // GET: api/<EventsController>/{tz}
-        [HttpGet]
-        public ActionResult<Doctor> Get(int tz)
+        // GET: api/<EventsController>/{Tz}
+        //[HttpGet("{Tz}")]
+        //public ActionResult<Doctor> Get(int Tz)
+        //{
+        //    var doctor = _doctorService.GetDoctorByTz(Tz);
+        //    var doctorDto = _mapper.Map<DoctorDto>(doctor);
+        //    if (doctor == null)
+        //        return NotFound();
+        //    return Ok(doctorDto);
+        //}
+        // GET: api/<EventsController>/{id}
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Doctor>> Get(int id)
         {
-            Doctor d = _dataContext.Doctors.Find(e => e.Tz == tz);
-            if (d != null)
-                return d;
-            else return NotFound();
+            var doctor =await _doctorService.GetDoctorByIdAsync(id);
+            var doctorDto = _mapper.Map<DoctorDto>(doctor);
+            if (doctor == null)
+                return NotFound();
+            return Ok(doctorDto);
         }
 
         // POST api/<EventsController>
         [HttpPost]
-        public void Post([FromBody] Doctor newDoctor)
+        public async Task<ActionResult> Post([FromBody] DoctorPostModel newDoctor)
         {
-            _dataContext.Doctors.Add(new Doctor { Tz = newDoctor.Tz, FirstName = newDoctor.FirstName, LastName = newDoctor.LastName, Domain = newDoctor.Domain });
+            var doctorToAdd = new Doctor {Tz = newDoctor.Tz ?? 1234, FirstName = newDoctor.FirstName, LastName = newDoctor.LastName, Domain = newDoctor.Domain };
+            var newD= await _doctorService.AddDoctorAsync(doctorToAdd);
+            var doctorDto = _mapper.Map<DoctorDto>(newD);
+            return Ok(doctorDto);
+
         }
 
-        // PUT api/<EventsController>/{tz}
+        // PUT api/<EventsController>/{id}
         [HttpPut("{id}")]
-        public ActionResult<Doctor> Put(int tz, Doctor d)
+        public async Task<ActionResult<Doctor>> Put(int id, [FromBody] DoctorPostModel d)
         {
-            Doctor d1 = _dataContext.Doctors.Find(e => e.Tz == tz);
-            if(d1== null)
-            {
+            var doctorToAdd = new Doctor { Tz = d.Tz ?? 1234, FirstName = d.FirstName, LastName = d.LastName, Domain = d.Domain };
+            Doctor doc =await _doctorService.UpdateDoctorAsync(id,doctorToAdd);
+            if (doc == null)
                 return NotFound();
-            }
-            d1.Tz = d.Tz;
-            d1.FirstName = d.FirstName;
-            d1.LastName = d.LastName;
-            d1.Domain = d.Domain;
-
-            return d1;
+            return Ok(doc);
         }
 
-        // DELETE api/<EventsController>/{tz}
+        // DELETE api/<EventsController>/{id}
         [HttpDelete("{id}")]
-        public void Delete(int tz)
+        public async Task Delete(int id)
         {
-            Doctor d = _dataContext.Doctors.Find(e => e.Tz == tz);
-            _dataContext.Doctors.Remove(d);
+            await _doctorService.DeleteDoctorAsync(id);
         }
+      
     }
 }
