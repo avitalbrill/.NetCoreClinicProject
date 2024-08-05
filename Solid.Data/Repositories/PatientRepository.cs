@@ -1,64 +1,130 @@
 ﻿
+//using Microsoft.EntityFrameworkCore;
+//using Solid.Core.Entities;
+//using Solid.Core.Repositories;
+//using System;
+//using System.Collections.Generic;
+//using System.Linq;
+//using System.Numerics;
+//using System.Text;
+//using System.Threading.Tasks;
+
+//namespace Solid.Data.Repositories
+//{ 
+//    public class PatientRepository:IPatientRepository
+//    {
+//        private readonly DataContext _dataContext;
+//        public PatientRepository(DataContext datacontext)
+//        {
+//           _dataContext = datacontext;
+//        }
+
+//        public async Task<List<Patient>> GetAllPatientsAsync()
+//        {
+
+//            return await _dataContext.Patients.ToListAsync();
+
+//        }
+//        public async Task<Patient> GetPatientByTzAsync(int Tz)
+//        {
+//            var p = await _dataContext.Patients.FirstAsync(e => e.Tz == Tz);
+//            return p;
+//        }
+//        public async Task<Patient> AddPatientAsync(Patient p)
+//        {
+//            _dataContext.Patients.Add(p);
+//            await _dataContext.SaveChangesAsync();
+//            return p;
+//        }
+//        public async Task<Patient> UpdatePatientAsync(int id,Patient p)
+//        {
+//            var pat = await _dataContext.Patients.FirstAsync(d => d.Id == id);
+//            pat.FirstName = p.FirstName;
+//            pat.LastName = p.LastName;
+//            pat.Age = p.Age;
+//            await _dataContext.SaveChangesAsync();
+//            return pat;
+//        }
+
+
+
+//        public async Task DeletePatientAsync(int id)
+//        {
+//            var p =await _dataContext.Patients.FirstAsync(d => d.Id == id);
+//             _dataContext.Patients.Remove(p);
+//            await _dataContext.SaveChangesAsync();
+//        }
+
+//        public async Task<Patient> GetPatientByIdAsync(int Id)
+//        {
+//            var p = await _dataContext.Patients.FirstAsync(e => e.Id == Id);
+//            return p;
+//        }
+//    }
+//}
 using Microsoft.EntityFrameworkCore;
 using Solid.Core.Entities;
 using Solid.Core.Repositories;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Solid.Data.Repositories
-{ 
-    public class PatientRepository:IPatientRepository
+{
+    public class PatientRepository : IPatientRepository
     {
         private readonly DataContext _dataContext;
+
         public PatientRepository(DataContext datacontext)
         {
-           _dataContext = datacontext;
+            _dataContext = datacontext;
         }
 
         public async Task<List<Patient>> GetAllPatientsAsync()
         {
-
             return await _dataContext.Patients.ToListAsync();
-
         }
         public async Task<Patient> GetPatientByTzAsync(int Tz)
         {
             var p = await _dataContext.Patients.FirstAsync(e => e.Tz == Tz);
             return p;
         }
+
+        public async Task<Patient> GetPatientByIdAsync(int id)
+        {
+            return await _dataContext.Patients.FirstOrDefaultAsync(e => e.Id == id);
+        }
+
         public async Task<Patient> AddPatientAsync(Patient p)
         {
             _dataContext.Patients.Add(p);
             await _dataContext.SaveChangesAsync();
-            return p;
+            return await GetPatientByIdAsync(p.Id);
         }
-        public async Task<Patient> UpdatePatientAsync(int id,Patient p)
+
+        public async Task<Patient> UpdatePatientAsync(int id, Patient p)
         {
-            var pat = await _dataContext.Patients.FirstAsync(d => d.Id == id);
-            pat.FirstName = p.FirstName;
-            pat.LastName = p.LastName;
-            pat.Age = p.Age;
-            await _dataContext.SaveChangesAsync();
-            return pat;
+            var pat = await _dataContext.Patients.FirstOrDefaultAsync(d => d.Id == id);
+            if (pat != null)
+            {
+                pat.FirstName = p.FirstName;
+                pat.LastName = p.LastName;
+                pat.Age = p.Age;
+                await _dataContext.SaveChangesAsync();
+                return await GetPatientByIdAsync(id);
+            }
+            return null;
         }
-
-
 
         public async Task DeletePatientAsync(int id)
         {
-            var p =await _dataContext.Patients.FirstAsync(d => d.Id == id);
-             _dataContext.Patients.Remove(p);
-            await _dataContext.SaveChangesAsync();
-        }
-
-        public async Task<Patient> GetPatientByIdAsync(int Id)
-        {
-            var p = await _dataContext.Patients.FirstAsync(e => e.Id == Id);
-            return p;
+            var p = await _dataContext.Patients.FirstOrDefaultAsync(d => d.Id == id);
+            if (p != null)
+            {
+                _dataContext.Patients.Remove(p);
+                await _dataContext.SaveChangesAsync();
+            }
         }
     }
 }
+
